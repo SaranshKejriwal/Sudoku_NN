@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Sudoku_NN", "Sudoku_NN.pyproj", "{5688D8D7-935A-431E-9BF8-5451A1CA77B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{58283C44-83D5-459D-9993-3C41264F0350}"
+	ProjectSection(SolutionItems) = preProject
+		modelRunner.py = modelRunner.py
+		notes.txt = notes.txt
+		simpleNNModel.py = simpleNNModel.py
+		sudokuSolutionValidator.py = sudokuSolutionValidator.py
+		sudokuDataManager.py = sudokuDataManager.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "models", "models", "{74387F34-217A-483F-A9DF-E50BCBAD01B9}"
+	ProjectSection(SolutionItems) = preProject
+		abstractModel.py = abstractModel.py
+		simpleNNModel.py = simpleNNModel.py
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5688D8D7-935A-431E-9BF8-5451A1CA77B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5688D8D7-935A-431E-9BF8-5451A1CA77B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{74387F34-217A-483F-A9DF-E50BCBAD01B9} = {58283C44-83D5-459D-9993-3C41264F0350}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A0EF78CC-9CF6-4AA7-8F6F-66B76BAF0553}
+	EndGlobalSection
+EndGlobal
