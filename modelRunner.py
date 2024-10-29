@@ -3,8 +3,7 @@
 
 '''
 
-import solverModel
-import sudokuDataManager
+from sudokuDataManager import sudokuDataManager
 import abstractModel
 
 class modelRunner():
