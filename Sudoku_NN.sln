@@ -10,13 +10,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		modelRunner.py = modelRunner.py
 		notes.txt = notes.txt
 		simpleNNModel.py = simpleNNModel.py
-		sudokuSolutionValidator.py = sudokuSolutionValidator.py
 		sudokuDataManager.py = sudokuDataManager.py
+		sudokuSolutionValidator.py = sudokuSolutionValidator.py
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "models", "models", "{74387F34-217A-483F-A9DF-E50BCBAD01B9}"
 	ProjectSection(SolutionItems) = preProject
 		abstractModel.py = abstractModel.py
+		mathFunctions.py = mathFunctions.py
+		simpleNN.py = simpleNN.py
 		simpleNNModel.py = simpleNNModel.py
 	EndProjectSection
 EndProject
