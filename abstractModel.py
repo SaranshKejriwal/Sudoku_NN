@@ -13,3 +13,7 @@ class abstractModel():
     #initializes model params with random values;
     def initParams(self):
         return
+
+    #returns the prediction of the model and compares it to the expected output.
+    def testModel(self, x_test, y_test):
+        return

@@ -12,7 +12,7 @@ class simpleNNModel(abstractModel):
     #hyper-parameters
     alpha_learning_rate = 0.01
 
-    iterations = 2 #number of iterations for which the model should run
+    iterations = 4 #number of iterations for which the model should run
 
     numNetworks = 81 #number of individual simpleNN objects
 
@@ -22,13 +22,14 @@ class simpleNNModel(abstractModel):
     #sudokuSimpleNN = simpleNN[sudokuGridSize][sudokuGridSize]
     sudokuSimpleNN = [[simpleNN() for j in range(9)] for i in range(9)] #2D array
 
+    modelLoss = [[999 for j in range(9)] for i in range(9)] #2D array that holds the loss value of the network
+
     def trainModel(self, x_train, y_train):
         print("training Simple Neural Net Model with 81 neural nets for each cell...")
 
-        print(y_train)
-        print (y_train[:,0])
-
         for t in range(self.iterations):
+
+            print("Now starting Iteration ",t)
 
             for i in range (self.sudokuGridSize):
                 for j in range (self.sudokuGridSize):
@@ -38,20 +39,29 @@ class simpleNNModel(abstractModel):
                         if you distribute a row of 81 entries on a 9x9 grid, cell (i,j) will contain entry number 9i+j '''
                     y_train_cell_ij = y_train[:,9*i + j] 
                     
-
-                    self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_cell_ij) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
+                    self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_cell_ij,(i,j)) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
+                    self.modelLoss[i][j] = self.sudokuSimpleNN[i][j].currentLoss
 
         return 
 
 
-    #this method initializes the starting weights and biases of the network before training.
-    '''def initParams(self):
+    def testModel(self, x_test, y_test):
+        
+        accuracy = 0 #this is defined as the number of expected output cells correctly predicted
 
-        W1 = np.random.randn(self.input_layer_neurons,81) #12 neurons of size 81, to align with input matrix
-        b1 = np.random.randn(self.input_layer_neurons, ) #Note - adding (x,y) creates a list of lists.
+        for i in range(self.sudokuGridSize):
+            for j in range(self.sudokuGridSize):
 
-        W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) 
-        b2 = np.random.randn(self.hidden_layer_neurons, )
+                y_test_cell_ij = y_test[:,9*i + j] 
 
-        return W1, b1, W2, b2'''
+                Z1, A1, Z2, A2 = self.sudokuSimpleNN[i][j].forwardProp(x_test)
+
+                prediction_ij = np.argmax(A2,0) #return the value with the highest probability
+
+                if((prediction_ij == y_test_cell_ij).all()):
+                    accuracy+=1 #cell was predicted correctly
+        
+        print("model accuracy: ", accuracy/y_test.size)
+        
+        return
 

@@ -3,6 +3,7 @@ This class contains a single 10 layer neural network.
 The simpleNNModel will create 81 of these simpleNN objects, one for each cell in Sudoku.
 '''
 from ast import Num
+from colorsys import yiq_to_rgb
 from math import log
 import mathFunctions
 import numpy as np
@@ -28,12 +29,16 @@ class simpleNN:
         return
 
 
-    def trainModel(self, x_train, y_train):
-        #print("training Simple Neural Net Model...")
+    def trainModel(self, x_train, y_train, cellPosition):
+        
         numSamples = y_train.size
 
-        Z1, A1, Z2, A2 = self.forwardProp(self.W1, self.b1, self.W2, self.b2, x_train)
+        Z1, A1, Z2, A2 = self.forwardProp(x_train)
         expectedOutputProbability = self.updateLossValue(A2,y_train)
+
+        #print("loss at cell position ", cellPosition)
+        #print(self.currentLoss)
+
 
         dW2, dB2, dW1, dB1 = self.backProp(numSamples, expectedOutputProbability, A1,Z1,self.W2,x_train)
 
@@ -41,35 +46,24 @@ class simpleNN:
 
         return 
 
-    def forwardProp(self, W1, b1, W2, b2, x_train):
+    def forwardProp(self, x_train):
         #this method takes weights and biases as external args, not from the class properties itself.
-        print(W1.shape)
-        print (x_train.T.shape)
-        print (b1.shape) #12,1
-        Z1 = np.add(W1.dot(x_train.T) , b1) #equivalent to Z1 = W1.X1_T + b1
-
-        print(Z1.shape) #12,m
-
-        A1 = mathFunctions.Tanh(Z1)
-        print(A1.shape) #12, m
         
-        Z2 = np.add(W2.dot(A1) , b2) #equivalent to Z2 = W2.A1 + b1     Note that A1 is NOT transposed.
+        Z1 = np.add(self.W1.dot(x_train.T) , self.b1) #equivalent to Z1 = W1.X1_T + b1; should be of shape (12,m)
 
-        print(Z2.shape)
+        A1 = mathFunctions.Tanh(Z1)  #12,m
+        
+        Z2 = np.add(self.W2.dot(A1) , self.b2) #equivalent to Z2 = W2.A1 + b1     Note that A1 is NOT transposed.
+        #should be of shape (9,m)
+        A2 = mathFunctions.softmax(Z2) #should be of shape (9,m) 
 
-        A2 = mathFunctions.softmax(Z2)
-        print(A2.shape)
-
-        return Z1, Z1, Z2, A2
+        return Z1, A1, Z2, A2
 
     def updateLossValue(self, A2, y_train):
 
         #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
 
         numExamples = np.shape(y_train)[0] #get number of rows in y_train
-
-        print(numExamples)
-
         yOneHot = mathFunctions.getOneHotVector(y_train)
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
@@ -77,14 +71,16 @@ class simpleNN:
 
 
         #using negative log likelihood method to calculate loss value for all the training examples
-
-        logA2 = -1 * np.log(A2)
+        try:
+            lossVector = -1 * np.log(A2)
+            self.currentLoss = np.multiply(lossVector,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
+        except:
+            print("Negative Log Likelihood failed for: ", A2) #needed in case there are any "Not-a-number" issues.
+            print("loss Computation failed for: ", lossVector)
 
         #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
         #Note - Do NOT attempt an element wise multiplication and take a log of that, because most elements there will be 0, and log(0) is -infinity
-        self.currentLoss = np.multiply(logA2,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
-
-        #print("current loss: ",self.currentLoss)
+        
 
         return probabilityOfExpectedOutput
 
@@ -92,27 +88,37 @@ class simpleNN:
 
         #Refer to implementation notes in Word document. probabilityOfExpectedOutput is equivalent to A2y
 
-        dW2 = (-1)*(A2y.dot(A1))/numSamples #check implementation notes
-        dA1 = (-1)*(A2y.dot(W2))/numSamples #this is an intermediate step used to calculate dW1 and dB1
+        '''print("A2y ",A2y.shape)
+        print("A1 ",A1.shape)
+        print("Z1 ",Z1.shape)
+        print("W2 ",W2.shape)
+        print("x_tr ",x_train.shape)'''
 
-        dB2 = (-1)*(A2y)/numSamples
+        dW2 = (-1)*(A2y.dot(A1.T))/numSamples #check implementation notes -> A2y is (9,m) and A1 is (12,m); dW2 should be (9,12), same as W2
+        dA1 = (-1)*((W2.T).dot(A2y))/numSamples #this is an intermediate step used to calculate dW1 and dB1; dA1 should be (12,2), same as A1
 
+        dB2 = (-1)*(np.sum(A2y, axis=1, keepdims=True))/numSamples # dB2 should be (9,1), same as B2
 
-        dB1 = dA1.dot(mathFunctions.dTanh(Z1)) #equivalent to d(loss)/d(A1) . d(A1)/d(Z1) 
+        dZ1 = np.multiply(dA1,mathFunctions.dTanh(Z1)) #note that this is an element-wise multiplication, not a dot-product
+        #size of dZ1 should be (12,m), same as Z1
+
+        dB1 = np.sum(dA1.dot(mathFunctions.dTanh(Z1.T)), axis = 1, keepdims=True) #equivalent to d(loss)/d(A1) . d(A1)/d(Z1) 
         #d(A1)/d(Z1) = g'(Z1) = dTanh(Z1)
-        #note that dB1 = dZ1 because Z1 = W1.X + B1, so we need not save dZ1 as a separate variable.
+        #note that dB1 = dZ1.sum because Z1 = W1.X + B1; Z1 has distinct columns for each training example but b1 doesn't
 
-        dW1 = dB1.dot(x_train)
+        #IMPORTANT - keepdims = True ensures that dB1 is of shape (12,1) and not (12,)
+
+        dW1 = dZ1.dot(x_train)
 
         return dW2, dB2, dW1, dB1
 
 
     def updateParams(self,dW2, dB2, dW1, dB1):
 
-        self.W2 = self.W2 - dW2
-        self.b2 = self.b2 - dB2
-        self.W1 = self.W1 - dW1
-        self.b1 = self.b1 - dB1
+        self.W2 = self.W2 - dW2 #should be of shape (9,12)
+        self.b2 = self.b2 - dB2 #should be of shape (9,1)
+        self.W1 = self.W1 - dW1 #should be of shape (12,81)
+        self.b1 = self.b1 - dB1 #should be of shape (12,1)
 
         return
 
@@ -121,10 +127,10 @@ class simpleNN:
     def initParams(self):
 
         W1 = np.random.randn(self.input_layer_neurons,81) #12 neurons of 81 dimensions, to align with input matrix
-        b1 = np.random.randn(self.input_layer_neurons, 1) #Note - adding (x,y) creates a list of lists.
+        b1 = np.random.randn(self.input_layer_neurons,1) #Note - adding (x,y) creates a list of lists.
 
         W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) 
-        b2 = np.random.randn(self.hidden_layer_neurons, 1)
+        b2 = np.random.randn(self.hidden_layer_neurons,1)
 
         return W1, b1, W2, b2
 
