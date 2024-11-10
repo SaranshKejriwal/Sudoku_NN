@@ -12,7 +12,7 @@ class simpleNNModel(abstractModel):
     #hyper-parameters
     alpha_learning_rate = 0.01
 
-    iterations = 4 #number of iterations for which the model should run
+    iterations = 40 #number of iterations for which the model should run
 
     numNetworks = 81 #number of individual simpleNN objects
 
@@ -41,6 +41,7 @@ class simpleNNModel(abstractModel):
                     
                     self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_cell_ij,(i,j)) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
                     self.modelLoss[i][j] = self.sudokuSimpleNN[i][j].currentLoss
+            print("Average model loss by cell: ", np.mean(self.modelLoss))
 
         return 
 

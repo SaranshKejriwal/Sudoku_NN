@@ -4,7 +4,7 @@ The simpleNNModel will create 81 of these simpleNN objects, one for each cell in
 '''
 from ast import Num
 from colorsys import yiq_to_rgb
-from math import log
+from math import isnan, log
 import mathFunctions
 import numpy as np
 
@@ -39,6 +39,13 @@ class simpleNN:
         #print("loss at cell position ", cellPosition)
         #print(self.currentLoss)
 
+        '''if(isnan(self.currentLoss)):
+            print("Non-numeric Loss found at cell level. Printing parameters:")
+            print("Cell position: ", cellPosition)
+            print("Z1 ",Z1)
+            print("A1 ",A1)
+            print("Z2 ",Z2)
+            print("A2 ",A2)'''
 
         dW2, dB2, dW1, dB1 = self.backProp(numSamples, expectedOutputProbability, A1,Z1,self.W2,x_train)
 
@@ -51,13 +58,23 @@ class simpleNN:
         
         Z1 = np.add(self.W1.dot(x_train.T) , self.b1) #equivalent to Z1 = W1.X1_T + b1; should be of shape (12,m)
 
-        A1 = mathFunctions.Tanh(Z1)  #12,m
+        #Normalization required at this step for smoothing. Because Z1 values in just 10 iterations will start to touch infinity
+        Z1_max = np.absolute(Z1).max(0,keepdims=True) #for one training example, Z1 is of shape (12,1) -> take the max ABSOLUTE value across all +ive and -ive weights
+
+        Z1_normalized = np.divide(Z1,Z1_max) #this ensures that pre-activations are negative...ensuring that tanh() and softmax() combination does not cause +infinity values (especially in softmax)
+
+        #print("Z1", Z1)
+        #print("Z1_max", Z1_max)
+        #print("Z1_norm", Z1_normalized)
+
+        A1 = mathFunctions.Tanh(Z1_normalized)  #12,m
         
         Z2 = np.add(self.W2.dot(A1) , self.b2) #equivalent to Z2 = W2.A1 + b1     Note that A1 is NOT transposed.
+
         #should be of shape (9,m)
         A2 = mathFunctions.softmax(Z2) #should be of shape (9,m) 
 
-        return Z1, A1, Z2, A2
+        return Z1_normalized, A1, Z2, A2
 
     def updateLossValue(self, A2, y_train):
 
@@ -76,7 +93,6 @@ class simpleNN:
             self.currentLoss = np.multiply(lossVector,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
         except:
             print("Negative Log Likelihood failed for: ", A2) #needed in case there are any "Not-a-number" issues.
-            print("loss Computation failed for: ", lossVector)
 
         #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
         #Note - Do NOT attempt an element wise multiplication and take a log of that, because most elements there will be 0, and log(0) is -infinity
@@ -87,12 +103,6 @@ class simpleNN:
     def backProp(self, numSamples, A2y, A1, Z1, W2,x_train):
 
         #Refer to implementation notes in Word document. probabilityOfExpectedOutput is equivalent to A2y
-
-        '''print("A2y ",A2y.shape)
-        print("A1 ",A1.shape)
-        print("Z1 ",Z1.shape)
-        print("W2 ",W2.shape)
-        print("x_tr ",x_train.shape)'''
 
         dW2 = (-1)*(A2y.dot(A1.T))/numSamples #check implementation notes -> A2y is (9,m) and A1 is (12,m); dW2 should be (9,12), same as W2
         dA1 = (-1)*((W2.T).dot(A2y))/numSamples #this is an intermediate step used to calculate dW1 and dB1; dA1 should be (12,2), same as A1
