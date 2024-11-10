@@ -25,13 +25,21 @@ class simpleNNModel(abstractModel):
     def trainModel(self, x_train, y_train):
         print("training Simple Neural Net Model with 81 neural nets for each cell...")
 
-        y_train_formatted = np.reshape(y_train, (-1, self.sudokuGridSize)) #convert a list of 81 numbers into a 9x9 2D vector
+        print(y_train)
+        print (y_train[:,0])
 
         for t in range(self.iterations):
 
             for i in range (self.sudokuGridSize):
                 for j in range (self.sudokuGridSize):
-                    self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_formatted[i][j]) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
+
+                    '''From an array of [m,81], where m is the training example, we need to get the output for each cell individually, since one NN corresponds to one cell. 
+
+                        if you distribute a row of 81 entries on a 9x9 grid, cell (i,j) will contain entry number 9i+j '''
+                    y_train_cell_ij = y_train[:,9*i + j] 
+                    
+
+                    self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_cell_ij) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
 
         return 
 

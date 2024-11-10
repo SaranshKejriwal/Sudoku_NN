@@ -2,6 +2,7 @@
 This class contains a single 10 layer neural network.
 The simpleNNModel will create 81 of these simpleNN objects, one for each cell in Sudoku.
 '''
+from ast import Num
 from math import log
 import mathFunctions
 import numpy as np
@@ -65,19 +66,25 @@ class simpleNN:
 
         #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
 
+        numExamples = np.shape(y_train)[0] #get number of rows in y_train
+
+        print(numExamples)
+
         yOneHot = mathFunctions.getOneHotVector(y_train)
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
-        print(y_train)
-        print(A2)
-        print(yOneHot)
-        #probabilityOfExpectedOutput = A2[range(yOneHot.size),yOneHot]
-        probabilityOfExpectedOutput = np.multiply(A2,yOneHot) #get the probability of ONLY the expected output via element-wise multiplication
+        probabilityOfExpectedOutput = np.multiply(A2,yOneHot.T) #get the probability of ONLY the expected output via element-wise multiplication
 
-        print(probabilityOfExpectedOutput) #test only
 
         #using negative log likelihood method to calculate loss value for all the training examples
-        self.currentLoss = (-1 * sum(log(probabilityOfExpectedOutput)))/probabilityOfExpectedOutput.size
+
+        logA2 = -1 * np.log(A2)
+
+        #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
+        #Note - Do NOT attempt an element wise multiplication and take a log of that, because most elements there will be 0, and log(0) is -infinity
+        self.currentLoss = np.multiply(logA2,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
+
+        #print("current loss: ",self.currentLoss)
 
         return probabilityOfExpectedOutput
 

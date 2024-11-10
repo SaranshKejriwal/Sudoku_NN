@@ -20,7 +20,7 @@ def getGaussianInit(xDim, yDim):
 
 #this takes a digit from 1-9 as an input and returns an array of zeroes such that only the yth value is 1
 def getOneHotVector(y):
-    yOneHot = np.zeros(9,dtype=int)
-    yOneHot[y-1] = 1 #python index starts at 0, hence y-1
+    yOneHot = np.zeros((y.size, 9)) #get m x 9 zeroes which will be arranged into 9 columns, hence an (m,9) vector of zeros
+    yOneHot[np.arange(y.size), y] = 1
 
     return yOneHot
