@@ -12,7 +12,7 @@ class simpleNN:
     
     #Note - 12 aand neurons has been selected somewhat randomly for now, just to kick things off....
     input_layer_neurons = 12
-    hidden_layer_neurons = 10
+    hidden_layer_neurons = 9 # since output will have 9 possible values only.
     
     #this is not a hyperParam. THis value will track the loss within this specific network
     currentLoss = 9999 #initialized as a super high value to track any neurons that remain untrained in case their cell was largely populated.
@@ -42,17 +42,17 @@ class simpleNN:
 
     def forwardProp(self, W1, b1, W2, b2, x_train):
         #this method takes weights and biases as external args, not from the class properties itself.
-
+        print(W1.shape)
         print (x_train.T.shape)
         print (b1.shape) #12,1
-        Z1 = W1.dot(x_train.T) + b1
+        Z1 = np.add(W1.dot(x_train.T) , b1) #equivalent to Z1 = W1.X1_T + b1
 
-        print(Z1.shape) #12,1
+        print(Z1.shape) #12,m
 
         A1 = mathFunctions.Tanh(Z1)
-        print(A1.shape) #12, 1
+        print(A1.shape) #12, m
         
-        Z2 = W2.dot(A1.T) + b2
+        Z2 = np.add(W2.dot(A1) , b2) #equivalent to Z2 = W2.A1 + b1     Note that A1 is NOT transposed.
 
         print(Z2.shape)
 
@@ -63,12 +63,16 @@ class simpleNN:
 
     def updateLossValue(self, A2, y_train):
 
+        #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
+
         yOneHot = mathFunctions.getOneHotVector(y_train)
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
+        print(y_train)
         print(A2)
         print(yOneHot)
-        probabilityOfExpectedOutput = A2[range(y_train.size),yOneHot]
+        #probabilityOfExpectedOutput = A2[range(yOneHot.size),yOneHot]
+        probabilityOfExpectedOutput = np.multiply(A2,yOneHot) #get the probability of ONLY the expected output via element-wise multiplication
 
         print(probabilityOfExpectedOutput) #test only
 
@@ -110,10 +114,10 @@ class simpleNN:
     def initParams(self):
 
         W1 = np.random.randn(self.input_layer_neurons,81) #12 neurons of 81 dimensions, to align with input matrix
-        b1 = np.random.randn(self.input_layer_neurons, ) #Note - adding (x,y) creates a list of lists.
+        b1 = np.random.randn(self.input_layer_neurons, 1) #Note - adding (x,y) creates a list of lists.
 
         W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) 
-        b2 = np.random.randn(self.hidden_layer_neurons, )
+        b2 = np.random.randn(self.hidden_layer_neurons, 1)
 
         return W1, b1, W2, b2
 
