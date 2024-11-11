@@ -19,6 +19,7 @@ class simpleNN:
     #this is not a hyperParam. THis value will track the loss within this specific network
     currentLoss = 9999 #initialized as a super high value to track any neurons that remain untrained in case their cell was largely populated.
 
+    learning_rate = 0.001 #for updating params
     
 
     def __init__(self):
@@ -26,6 +27,14 @@ class simpleNN:
 
         #initialize the weights and biases of this network with random values from -0.5 to 0.5
         self.W1, self.b1, self.W2, self.b2 = self.initParams()
+
+        '''
+        W1 is 12x81
+        b1 is 12x1
+        W2 is 9x12
+        b2 is 9x1
+        '''
+
         return
 
 
@@ -39,13 +48,13 @@ class simpleNN:
         #print("loss at cell position ", cellPosition)
         #print(self.currentLoss)
 
-        '''if(isnan(self.currentLoss)):
+        if(isnan(self.currentLoss)): # just for seeing any issues in the logs
             print("Non-numeric Loss found at cell level. Printing parameters:")
             print("Cell position: ", cellPosition)
             print("Z1 ",Z1)
             print("A1 ",A1)
             print("Z2 ",Z2)
-            print("A2 ",A2)'''
+            print("A2 ",A2)
 
         dW2, dB2, dW1, dB1 = self.backProp(numSamples, expectedOutputProbability, A1,Z1,self.W2,x_train)
 
@@ -61,7 +70,7 @@ class simpleNN:
         #Normalization required at this step for smoothing. Because Z1 values in just 10 iterations will start to touch infinity
         Z1_max = np.absolute(Z1).max(0,keepdims=True) #for one training example, Z1 is of shape (12,1) -> take the max ABSOLUTE value across all +ive and -ive weights
 
-        Z1_normalized = np.divide(Z1,Z1_max) #this ensures that pre-activations are negative...ensuring that tanh() and softmax() combination does not cause +infinity values (especially in softmax)
+        Z1_normalized = np.divide(Z1,Z1_max) #this ensures that pre-activations are <1...ensuring that tanh() and softmax() combination does not cause +infinity values (especially in softmax)
 
         #print("Z1", Z1)
         #print("Z1_max", Z1_max)
@@ -125,10 +134,10 @@ class simpleNN:
 
     def updateParams(self,dW2, dB2, dW1, dB1):
 
-        self.W2 = self.W2 - dW2 #should be of shape (9,12)
-        self.b2 = self.b2 - dB2 #should be of shape (9,1)
-        self.W1 = self.W1 - dW1 #should be of shape (12,81)
-        self.b1 = self.b1 - dB1 #should be of shape (12,1)
+        self.W2 = self.W2 - self.learning_rate * dW2 #should be of shape (9,12)
+        self.b2 = self.b2 - self.learning_rate * dB2 #should be of shape (9,1)
+        self.W1 = self.W1 - self.learning_rate * dW1 #should be of shape (12,81)
+        self.b1 = self.b1 - self.learning_rate * dB1 #should be of shape (12,1)
 
         return
 
@@ -141,6 +150,8 @@ class simpleNN:
 
         W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) 
         b2 = np.random.randn(self.hidden_layer_neurons,1)
+
+        #Note - Loss will start increasing if Learning rate is too high
 
         return W1, b1, W2, b2
 
