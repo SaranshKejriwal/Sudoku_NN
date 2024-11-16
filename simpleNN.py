@@ -19,7 +19,7 @@ class simpleNN:
     #this is not a hyperParam. THis value will track the loss within this specific network
     currentLoss = 9999 #initialized as a super high value to track any neurons that remain untrained in case their cell was largely populated.
 
-    learning_rate = 0.001 #for updating params
+    learning_rate = 0.0001 #for updating params
     
 
     def __init__(self):
