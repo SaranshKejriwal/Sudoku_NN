@@ -11,7 +11,9 @@ def dTanh(tanh):
     return 1 - np.square(tanh)
 
 def softmax(z):
-    return np.exp(z)/(np.sum(np.exp(z))) 
+    A2 = np.exp(z)/(np.sum(np.exp(z),axis = 0)) 
+    #axis=0 argument is important, to ensure that the sum is only along the preactivations of ONE training example, not against the ENTIRE dataset. 
+    return A2
 
 #this function returns a list, or list of lists, of random values between -0.5 and 0.5
 #xDim is the size of the outer list and yDim is the siz of the inner list.

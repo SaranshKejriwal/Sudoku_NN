@@ -21,6 +21,11 @@ sg.createSudokuDatasetCSV(1000)
 m = modelRunner()
 s = sudokuDataManager()
 nn = simpleNNModel()
+
+#these single datapoints risk overfitting, but these are okay to at least curb the initalization losses.
+x_single = s.getTwoTrainingInputExamples()
+y_single = s.getTwoTrainingOutputExamples()
+
 x_train = s.getCSVTrainInputExamples()
 y_train = s.getCSVTrainOutputExamples()
 
@@ -30,7 +35,8 @@ y_val = s.getCSVValidationOutputExamples()
 #test model on SAME data before training - sanity only
 m.testModel(nn,x_train,y_train)
 
-m.trainModel(nn, x_train, y_train)
+#m.trainModel(nn, x_train, y_train)
+m.trainModel(nn, x_single, y_single)
 
 #training loss
 print('Final Training Data Accuracy:')
@@ -38,5 +44,5 @@ m.testModel(nn,x_train,y_train)
 
 #testing model
 print('Final Validation Data Accuracy:')
-m.testModel(nn,x_train,y_train)
+m.testModel(nn,x_val,y_val)
 #'''

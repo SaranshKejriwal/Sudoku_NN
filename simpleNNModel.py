@@ -29,7 +29,7 @@ class simpleNNModel(abstractModel):
 
             if(t%50==0):
                 print("Now starting Iteration ",t)
-                print("Model loss by cell: ", self.modelLoss)
+                #print("Model loss by cell: ", self.modelLoss)
                 print("Average model loss: ", np.mean(self.modelLoss))
 
             for i in range (self.sudokuGridSize):

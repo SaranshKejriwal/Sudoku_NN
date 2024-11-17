@@ -94,7 +94,9 @@ class simpleNN:
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
         probabilityOfExpectedOutput = np.multiply(A2,yOneHot.T) #get the probability of ONLY the expected output via element-wise multiplication
-
+        
+        #print(A2)
+        #print(probabilityOfExpectedOutput)
 
         #using negative log likelihood method to calculate loss value for all the training examples
         try:
