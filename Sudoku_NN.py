@@ -10,24 +10,33 @@ from sudokuGenerator import sudokuGenerator
 
 print("Hello World")
 
-
+#sudoku generation code
+'''
 sg = sudokuGenerator()
 
-sg.createSudokuDatasetCSV(100)
-
-
+sg.createSudokuDatasetCSV(1000)
 '''
+
+#'''
 m = modelRunner()
 s = sudokuDataManager()
 nn = simpleNNModel()
-x_train = s.getSingleInputExample()
-y_train = s.getSingleOutputExample()
+x_train = s.getCSVTrainInputExamples()
+y_train = s.getCSVTrainOutputExamples()
+
+x_val = s.getCSVValidationInputExamples()
+y_val = s.getCSVValidationOutputExamples()
 
 #test model on SAME data before training - sanity only
 m.testModel(nn,x_train,y_train)
 
 m.trainModel(nn, x_train, y_train)
 
-#test model on SAME data after training - sanity only
+#training loss
+print('Final Training Data Accuracy:')
 m.testModel(nn,x_train,y_train)
-'''
+
+#testing model
+print('Final Validation Data Accuracy:')
+m.testModel(nn,x_train,y_train)
+#'''

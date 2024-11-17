@@ -29,10 +29,12 @@ class simpleNNModel(abstractModel):
 
             if(t%50==0):
                 print("Now starting Iteration ",t)
-                print("Average model loss by cell: ", np.mean(self.modelLoss))
+                print("Model loss by cell: ", self.modelLoss)
+                print("Average model loss: ", np.mean(self.modelLoss))
 
             for i in range (self.sudokuGridSize):
                 for j in range (self.sudokuGridSize):
+
 
                     '''From an array of [m,81], where m is the training example, we need to get the output for each cell individually, since one NN corresponds to one cell. 
 
@@ -61,7 +63,7 @@ class simpleNNModel(abstractModel):
 
                 if((prediction_ij == y_test_cell_ij).all()):
                     accuracy+=1 #cell was predicted correctly
-        
+                #print("Prediction vs output",prediction_ij,y_test_cell_ij)
         print("model accuracy: ", accuracy/y_test.size)
         
         return

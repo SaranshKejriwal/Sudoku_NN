@@ -13,7 +13,7 @@ class simpleNN:
     #this will inherit its hyper parameters from the model class. This is only a single neural network
     
     #Note - 12 aand neurons has been selected somewhat randomly for now, just to kick things off....
-    input_layer_neurons = 12
+    input_layer_neurons = 10
     hidden_layer_neurons = 9 # since output will have 9 possible values only.
     
     #this is not a hyperParam. THis value will track the loss within this specific network
@@ -98,7 +98,7 @@ class simpleNN:
 
         #using negative log likelihood method to calculate loss value for all the training examples
         try:
-            lossVector = -1 * np.log(A2)
+            lossVector = -1 * np.log(A2)   
             self.currentLoss = np.multiply(lossVector,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
         except:
             print("Negative Log Likelihood failed for: ", A2) #needed in case there are any "Not-a-number" issues.
@@ -145,11 +145,18 @@ class simpleNN:
     #this method initializes the starting weights and biases of the network before training.
     def initParams(self):
 
-        W1 = np.random.randn(self.input_layer_neurons,81) #12 neurons of 81 dimensions, to align with input matrix
-        b1 = np.random.randn(self.input_layer_neurons,1) #Note - adding (x,y) creates a list of lists.
+        #Note - we want to curb the initialization loss by ensuring that the initial random weights don't end up taking extreme values that are "confidently wrong". Initial biases can be set to 0.
+        #Weights will multiplied by 0.1 to ensure that the initialization of the weights is as close to 0 as possible, and the network is basically making random guesses without training.
 
-        W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) 
-        b2 = np.random.randn(self.hidden_layer_neurons,1)
+        W1 = np.random.randn(self.input_layer_neurons,81) * 0.01 #12 neurons of 81 dimensions, to align with input matrix
+        
+        #b1 = np.random.randn(self.input_layer_neurons,1) #Note - adding (x,y) creates a list of lists.
+        b1 = np.zeros((self.input_layer_neurons,1))
+
+        W2 = np.random.randn(self.hidden_layer_neurons,self.input_layer_neurons) * 0.01
+        
+        #b2 = np.random.randn(self.hidden_layer_neurons,1)
+        b2 = np.zeros((self.hidden_layer_neurons,1))
 
         #Note - Loss will start increasing if Learning rate is too high
 

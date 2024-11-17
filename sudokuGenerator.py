@@ -27,18 +27,27 @@ class sudokuGenerator:
     def shuffle(self, s): 
         return sample(s,len(s)) 
 
-    def createSudokuDatasetCSV(self, numExamples):
+    def createSudokuDatasetCSV(self, numTrainingExamples):
 
-        xInputDataset = np.zeros((numExamples,81)) #if we want each row to be a separate example, then there need to be 81 columns
-        yOutputDataset = np.zeros((numExamples,81))
+        xInputTrainingDataset = np.zeros((numTrainingExamples,81)) #if we want each row to be a separate example, then there need to be 81 columns
+        yOutputTrainingDataset = np.zeros((numTrainingExamples,81))
 
-        for i in range(numExamples):
-            yOutputDataset[i] = self.createSingleSudokuCompletedPuzzle()
-            xInputDataset[i] = self.createPuzzleFromSolution(yOutputDataset[i])
+        #create new dataset for validation, and append to the validation csv.
+        numValidationExamples = int(numTrainingExamples/10)
 
-        print(yOutputDataset)
+        xInputValidationDataset = np.zeros((numValidationExamples,81)) #if we want each row to be a separate example, then there need to be 81 columns
+        yOutputValidationDataset = np.zeros((numValidationExamples,81))
 
-        self.writeSudokuToCSV(xInputDataset, yOutputDataset, numExamples)
+        #save training examples
+        for i in range(numTrainingExamples):
+            yOutputTrainingDataset[i] = self.createSingleSudokuCompletedPuzzle()
+            xInputTrainingDataset[i] = self.createPuzzleFromSolution(yOutputTrainingDataset[i])
+
+        #save validation examples
+        for i in range(numValidationExamples):
+            yOutputValidationDataset[i] = self.createSingleSudokuCompletedPuzzle()
+            xInputValidationDataset[i] = self.createPuzzleFromSolution(yOutputValidationDataset[i])
+        self.writeSudokuToCSV(xInputTrainingDataset, yOutputTrainingDataset, xInputValidationDataset, yOutputValidationDataset)
 
         return
 
@@ -52,28 +61,42 @@ class sudokuGenerator:
         #board = [ [nums[self.pattern(r,c)] for c in cols] for r in rows ]
         board = np.array([ [nums[self.pattern(r,c)] for c in cols] for r in rows ])
         yOutSingle = board.reshape(81) # the 9x9 board is now valid...create an continuous array from it as the output
-        print(yOutSingle)
         return yOutSingle
 
 
     def createPuzzleFromSolution(self, y):
 
-        #any 56 out of the 81 numbers will be set to 0, making this the partially incomplete sudoku
-        hiddenCells = np.random.choice(np.arange(y.size), replace=False, size=int(y.size * 0.7))
+        #this var specifies how much % of the puzzle should be hidden - should ideally be between 2% and 70%
+        gridPercentToHide = 0.1 
+        #Note - training and test data has examples where we took this value as 0.02 also,meaning that only 1-2 cells are hidden and rest are solved. This is easiest thing a model can do.
+        #Harder examples were appended to the existing training and test sets
+
+        #any % the 81 numbers will be set to 0, making this the partially incomplete sudoku
+        hiddenCells = np.random.choice(np.arange(y.size), replace=False, size=int(y.size * gridPercentToHide))
 
         x = np.copy(y) #copy y to x; Note x=y assignment operator creates a direct reference and updates both values.
         x[hiddenCells] = 0 #suppress x at the indices in hiddenCells
         return x
 
-    def writeSudokuToCSV(self, x, y, numExamples):
+    def writeSudokuToCSV(self, xTrain, yTrain, xVal, yVal):
 
-        inputFilename = 'datasets/input_'+str(numExamples)+'.csv' #create new filenames based on dataset sizes
-        outputFilename = 'datasets/output_'+str(numExamples)+'.csv'
+        inputTrainingFilename = 'datasets/training_input.csv'
+        outputTrainingFilename = 'datasets/training_output.csv'
 
-        xDF = pd.DataFrame(x)
-        yDF = pd.DataFrame(y)
+        inputValidationFilename = 'datasets/validation_input.csv'
+        outputValidationFilename = 'datasets/validation_output.csv'
 
-        xDF.to_csv(inputFilename, index=False)
-        yDF.to_csv(outputFilename, index=False)
+        xTrainDF = pd.DataFrame(xTrain)
+        yTrainDF = pd.DataFrame(yTrain)
+
+        xValDF = pd.DataFrame(xVal)
+        yValDF = pd.DataFrame(yVal)
+
+        #we don't want to overwrite the old training examples, we want to append them to the existing training set, hence mode = 'a'
+        xTrainDF.to_csv(inputTrainingFilename, mode='a', index=False, header = False) #header has to be false to ensure that index numbers (0-80) are not appended in the middle of the data.
+        yTrainDF.to_csv(outputTrainingFilename, mode='a', index=False, header = False)
+
+        xValDF.to_csv(inputValidationFilename, mode='a', index=False, header = False)
+        yValDF.to_csv(outputValidationFilename, mode='a', index=False, header = False)
 
         return
