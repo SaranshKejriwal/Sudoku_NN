@@ -32,15 +32,17 @@ y_train = s.getCSVTrainOutputExamples()
 x_val = s.getCSVValidationInputExamples()
 y_val = s.getCSVValidationOutputExamples()
 
-#test model on SAME data before training - sanity only
+#find accuracy before training
 m.testModel(nn,x_train,y_train)
+#m.testModel(nn, x_single, y_single) #for quick sanity checks
 
-m.trainModel(nn, x_train, y_train)
-#m.trainModel(nn, x_single, y_single) #for quick sanity checks
+m.trainModel(nn, x_train, y_train,2000)
+#m.trainModel(nn, x_single, y_single,400) #for quick sanity checks
 
 #training loss
 print('Final Training Data Accuracy:')
 m.testModel(nn,x_train,y_train)
+#m.testModel(nn, x_single, y_single) #for quick sanity checks
 
 #testing model
 print('Final Validation Data Accuracy:')

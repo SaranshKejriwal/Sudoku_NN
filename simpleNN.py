@@ -19,7 +19,7 @@ class simpleNN:
     #this is not a hyperParam. THis value will track the loss within this specific network
     currentLoss = 9999 #initialized as a super high value to track any neurons that remain untrained in case their cell was largely populated.
 
-    learning_rate = 0.0001 #for updating params
+    learning_rate = 0.01 #for updating params
     
 
     def __init__(self):
@@ -47,6 +47,9 @@ class simpleNN:
 
         #print("loss at cell position ", cellPosition)
         #print(self.currentLoss)
+
+        #reduce learning rate if loss is getting lower
+        self.adaptLearningRate(cellPosition)
 
         if(isnan(self.currentLoss)): # just for seeing any issues in the logs
             print("Non-numeric Loss found at cell level. Printing parameters:")
@@ -131,7 +134,7 @@ class simpleNN:
 
         return dW2, dB2, dW1, dB1
 
-
+    #this method updates params after backprop
     def updateParams(self,dW2, dB2, dW1, dB1):
 
         self.W2 = self.W2 - self.learning_rate * dW2 #should be of shape (9,12)
@@ -141,6 +144,16 @@ class simpleNN:
 
         return
 
+    #this method reduces the learning rate for each cell's network after its loss is low enough to not require large jumps
+    def adaptLearningRate(self, cellPosition):
+
+        if(self.currentLoss < 0.3 and self.learning_rate == 0.01):
+            self.learning_rate = 0.001 #reduced to one tenth for slower progression
+            #print("Learning Rate reduction for cell position ",cellPosition)
+            #print("Reducing learning rate to ", self.learning_rate)
+
+        return
+    #note - we should eventually add code to compare current loss with previous loss also.
 
     #this method initializes the starting weights and biases of the network before training.
     def initParams(self):

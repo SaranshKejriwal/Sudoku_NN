@@ -9,9 +9,9 @@ import abstractModel
 class modelRunner():
 
     # trains a fresh model using new training dataset
-    def trainModel(self, model, x_train, y_train):
+    def trainModel(self, model, x_train, y_train, numIterations):
 
-        model.trainModel(x_train, y_train)
+        model.trainModel(x_train, y_train, numIterations)
 
         return
 
