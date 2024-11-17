@@ -99,9 +99,9 @@ class simpleNN:
         try:
             lossVector = -1 * np.log10(A2)   
             #self.currentLoss = (np.multiply(lossVector,yOneHot.T).sum())/numExamples #get the loss against the indices of the expected output value.
-            self.currentLoss = np.mean((np.multiply(lossVector,yOneHot.T)))
+            self.currentLoss = np.sum((np.multiply(lossVector,yOneHot.T)))/numExamples
 
-            #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
+            #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))/numExamples
             #Note - Do NOT attempt an element wise multiplication and THEN take a log of that, because most elements there will be 0, and log(0) is -infinity
 
         except:

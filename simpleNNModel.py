@@ -23,7 +23,7 @@ class simpleNNModel(abstractModel):
     modelLoss = [[999 for j in range(9)] for i in range(9)] #2D array that holds the loss value of the network
 
     def trainModel(self, x_train, y_train):
-        print("training Simple Neural Net Model with 81 neural nets for each cell...")
+        print("training Simple Neural Net Model with 81 neural nets - 1 for each cell...")
 
         for t in range(self.iterations):
 
