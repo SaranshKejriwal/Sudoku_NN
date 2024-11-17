@@ -35,8 +35,8 @@ y_val = s.getCSVValidationOutputExamples()
 #test model on SAME data before training - sanity only
 m.testModel(nn,x_train,y_train)
 
-#m.trainModel(nn, x_train, y_train)
-m.trainModel(nn, x_single, y_single)
+m.trainModel(nn, x_train, y_train)
+#m.trainModel(nn, x_single, y_single) #for quick sanity checks
 
 #training loss
 print('Final Training Data Accuracy:')

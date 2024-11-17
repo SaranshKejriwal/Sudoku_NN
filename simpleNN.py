@@ -94,20 +94,18 @@ class simpleNN:
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
         probabilityOfExpectedOutput = np.multiply(A2,yOneHot.T) #get the probability of ONLY the expected output via element-wise multiplication
-        
-        #print(A2)
-        #print(probabilityOfExpectedOutput)
 
         #using negative log likelihood method to calculate loss value for all the training examples
         try:
-            lossVector = -1 * np.log(A2)   
-            self.currentLoss = np.multiply(lossVector,yOneHot.T).sum()/numExamples #get the loss against the indices of the expected output value.        
-        except:
-            print("Negative Log Likelihood failed for: ", A2) #needed in case there are any "Not-a-number" issues.
+            lossVector = -1 * np.log10(A2)   
+            #self.currentLoss = (np.multiply(lossVector,yOneHot.T).sum())/numExamples #get the loss against the indices of the expected output value.
+            self.currentLoss = np.mean((np.multiply(lossVector,yOneHot.T)))
 
-        #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
-        #Note - Do NOT attempt an element wise multiplication and take a log of that, because most elements there will be 0, and log(0) is -infinity
-        
+            #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))
+            #Note - Do NOT attempt an element wise multiplication and THEN take a log of that, because most elements there will be 0, and log(0) is -infinity
+
+        except:
+            print("Negative Log Likelihood failed for: ", A2) #needed in case there are any "Not-a-number" issues.      
 
         return probabilityOfExpectedOutput
 
