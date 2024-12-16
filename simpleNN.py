@@ -40,10 +40,10 @@ class simpleNN:
 
     def trainModel(self, x_train, y_train, cellPosition):
         
-        numSamples = y_train.size
+        numSamples = np.shape(y_train)[0] #y.size will give number of cells, not number of rows.
 
         Z1, A1, Z2, A2 = self.forwardProp(x_train)
-        expectedOutputProbability = self.updateLossValue(A2,y_train)
+        expectedOutputProbability = self.updateLossValue(A2,y_train, numSamples)
 
         #print("loss at cell position ", cellPosition)
         #print(self.currentLoss)
@@ -66,7 +66,6 @@ class simpleNN:
         return 
 
     def forwardProp(self, x_train):
-        #this method takes weights and biases as external args, not from the class properties itself.
         
         Z1 = np.add(self.W1.dot(x_train.T) , self.b1) #equivalent to Z1 = W1.X1_T + b1; should be of shape (12,m)
 
@@ -79,20 +78,19 @@ class simpleNN:
         #print("Z1_max", Z1_max)
         #print("Z1_norm", Z1_normalized)
 
-        A1 = mathFunctions.Tanh(Z1_normalized)  #12,m
+        A1 = mathFunctions.tanh(Z1_normalized)  #12,m
         
         Z2 = np.add(self.W2.dot(A1) , self.b2) #equivalent to Z2 = W2.A1 + b1     Note that A1 is NOT transposed.
 
         #should be of shape (9,m)
-        A2 = mathFunctions.softmax(Z2) #should be of shape (9,m) 
+        A2 = mathFunctions.softmax(Z2, softmax_axis=0) #should be of shape (9,m) 
 
         return Z1_normalized, A1, Z2, A2
 
-    def updateLossValue(self, A2, y_train):
+    def updateLossValue(self, A2, y_train,numSamples):
 
         #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
 
-        numExamples = np.shape(y_train)[0] #get number of rows in y_train
         yOneHot = mathFunctions.getOneHotVector(y_train)
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
@@ -102,7 +100,7 @@ class simpleNN:
         try:
             lossVector = -1 * np.log10(A2)   
             #self.currentLoss = (np.multiply(lossVector,yOneHot.T).sum())/numExamples #get the loss against the indices of the expected output value.
-            self.currentLoss = np.sum((np.multiply(lossVector,yOneHot.T)))/numExamples
+            self.currentLoss = np.sum((np.multiply(lossVector,yOneHot.T)))/numSamples
 
             #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))/numExamples
             #Note - Do NOT attempt an element wise multiplication and THEN take a log of that, because most elements there will be 0, and log(0) is -infinity

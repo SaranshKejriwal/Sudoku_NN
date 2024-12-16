@@ -18,9 +18,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "models", "models", "{74387F34-217A-483F-A9DF-E50BCBAD01B9}"
 	ProjectSection(SolutionItems) = preProject
 		abstractModel.py = abstractModel.py
+		convNN.py = convNN.py
+		convNNClasses.py = convNNClasses.py
+		convNNModel.py = convNNModel.py
 		mathFunctions.py = mathFunctions.py
 		simpleNN.py = simpleNN.py
 		simpleNNModel.py = simpleNNModel.py
+		wavenetNN.py = wavenetNN.py
+		wavenetNNModel.py = wavenetNNModel.py
 	EndProjectSection
 EndProject
 Global

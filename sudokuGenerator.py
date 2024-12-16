@@ -67,7 +67,7 @@ class sudokuGenerator:
     def createPuzzleFromSolution(self, y):
 
         #this var specifies how much % of the puzzle should be hidden - should ideally be between 2% and 70%
-        gridPercentToHide = 0.1 
+        gridPercentToHide = 0.2 
         #Note - training and test data has examples where we took this value as 0.02 also,meaning that only 1-2 cells are hidden and rest are solved. This is easiest thing a model can do.
         #Harder examples were appended to the existing training and test sets
 
@@ -98,5 +98,37 @@ class sudokuGenerator:
 
         xValDF.to_csv(inputValidationFilename, mode='a', index=False, header = False)
         yValDF.to_csv(outputValidationFilename, mode='a', index=False, header = False)
+
+        return
+
+    #this function will be useful for the wavenet training, to generate an array of 9 numbers, and the wavenet model will have to find the missing number
+    def createMiniBlockDatasetCSV(self, numTrainingExamples):
+
+        block_base =  [1,2,3,4,5,6,7,8,9] #9 numbers that will be found in any 3x3 grid or 9x1 column or 1x9 row
+        block_base = np.array(block_base)
+
+        xInputTrainingDataset = np.zeros((numTrainingExamples,9)) 
+        yOutputTrainingDataset = np.zeros((numTrainingExamples,9))
+
+        #create new dataset for validation, and append to the validation csv.
+        numValidationExamples = int(numTrainingExamples/10)
+
+        xInputValidationDataset = np.zeros((numValidationExamples,9)) #if we want each row to be a separate example, then there need to be 81 columns
+        yOutputValidationDataset = np.zeros((numValidationExamples,9))
+
+        #save training examples - write a set of shuffled 9 numbers which will represent the grid/row/column of a sudoku
+        for i in range(numTrainingExamples):
+            yOutputTrainingDataset[i] = np.random.permutation(block_base) #we're not generating a full sudoku here. We only want representation of one-ninth part of a sudoku
+            #note - np.random.shuffle doesn't return the value. Only shuffles in place
+            xInputTrainingDataset[i] = self.createPuzzleFromSolution(yOutputTrainingDataset[i])
+
+        #save validation examples
+        for i in range(numValidationExamples):
+            yOutputValidationDataset[i] = np.random.permutation(block_base)
+            xInputValidationDataset[i] = self.createPuzzleFromSolution(yOutputValidationDataset[i])
+
+
+        self.writeSudokuToCSV(xInputTrainingDataset, yOutputTrainingDataset, xInputValidationDataset, yOutputValidationDataset)
+
 
         return

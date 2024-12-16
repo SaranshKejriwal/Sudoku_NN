@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from modelRunner import modelRunner
 from simpleNNModel import simpleNNModel
+from wavenetNNModel import wavenetNNModel
+from convNNModel import convNNModel
 from sudokuDataManager import sudokuDataManager
 from sudokuGenerator import sudokuGenerator
 
@@ -14,13 +16,14 @@ print("Hello World")
 '''
 sg = sudokuGenerator()
 
-sg.createSudokuDatasetCSV(1000)
+sg.createMiniBlockDatasetCSV(500)
 '''
 
 #'''
 m = modelRunner()
 s = sudokuDataManager()
-nn = simpleNNModel()
+#nn = simpleNNModel()
+nn = convNNModel()
 
 #these single datapoints risk overfitting, but these are okay to at least curb the initalization losses.
 x_single = s.getTwoTrainingInputExamples()

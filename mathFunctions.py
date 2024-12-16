@@ -3,15 +3,17 @@ this script contains all common mathematical functions that will be used across 
 '''
 import numpy as np
 
-def Tanh(z):
+def tanh(z):
     return np.tanh(z)
 
 def dTanh(tanh):
     #Derivative of tanh() is 1- tanh()^2
     return 1 - np.square(tanh)
 
-def softmax(z):
-    A2 = np.exp(z)/(np.sum(np.exp(z),axis = 0)) 
+def softmax(z, softmax_axis = 0):
+    #z_sum = np.sum(np.exp(z),axis = softmax_axis, keepdims=True)
+    #print("z_sum Shape:", z_sum.shape)
+    A2 = np.divide(np.exp(z),(np.sum(np.exp(z),axis = softmax_axis, keepdims=True))) 
     #axis=0 argument is important, to ensure that the sum is only along the preactivations of ONE training example, not against the ENTIRE dataset. 
     return A2
 

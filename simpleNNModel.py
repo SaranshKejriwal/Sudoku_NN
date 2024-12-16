@@ -10,8 +10,6 @@ from simpleNN import simpleNN
 class simpleNNModel(abstractModel):
 
     #hyper-parameters
-    numNetworks = 81 #number of individual simpleNN objects
-
     sudokuGridSize = 9 #this will be constant.
 
     #this is a 9x9 array of networks
@@ -37,7 +35,7 @@ class simpleNNModel(abstractModel):
                     '''From an array of [m,81], where m is the training example, we need to get the output for each cell individually, since one NN corresponds to one cell. 
 
                         if you distribute a row of 81 entries on a 9x9 grid, cell (i,j) will contain entry number 9i+j '''
-                    y_train_cell_ij = y_train[:,9*i + j] #this corresponds to a vector of output values on a single cell across ALL training examples.
+                    y_train_cell_ij = y_train[:,self.sudokuGridSize*i + j] #this corresponds to a vector of output values on a single cell across ALL training examples.
                     
                     self.sudokuSimpleNN[i][j].trainModel(x_train, y_train_cell_ij,(i,j)) #each network will receive the entire grid of input sudoku but will focus only on its own cell.
                     self.modelLoss[i][j] = self.sudokuSimpleNN[i][j].currentLoss
@@ -56,15 +54,14 @@ class simpleNNModel(abstractModel):
         for i in range(self.sudokuGridSize):
             for j in range(self.sudokuGridSize):
 
-                y_test_cell_ij = y_test[:,9*i + j] 
+                y_test_cell_ij = y_test[:,self.sudokuGridSize*i + j] 
 
                 Z1, A1, Z2, A2 = self.sudokuSimpleNN[i][j].forwardProp(x_test)
 
-                predictions[:,9*i + j] = (np.argmax(A2,0)+1).astype(int) #argmax() returns the INDEX of the value with the highest probability, which we increase by 1 to get the corresponding sudoku answer
+                predictions[:,self.sudokuGridSize*i + j] = (np.argmax(A2,0)+1).astype(int) #argmax() returns the INDEX of the value with the highest probability, which we increase by 1 to get the corresponding sudoku answer
 
         #cell by cell compare
         accuracy = np.count_nonzero(predictions == y_test) #returns a count of cells where values are true (False counts as 0)
-
         #note - we're comparing each cell in y to each cell in predictions, instead of columns, since each column consists of several cells across several examples, and if one cell is different, then the whole column is considered non-equal
         print("model accuracy: ", accuracy/y_test.size)
         
