@@ -4,7 +4,6 @@ The wavenetNN will create 729 of these simpleNN objects, 3 for each cell in Sudo
 
 Each of these wavenet networks will be needed to predict the missing number among 9 - either in row, column or grid - which is relatively achievable in a neural network
 '''
-from ast import Num
 from math import isnan, log
 import mathFunctions
 import numpy as np
@@ -21,14 +20,16 @@ class convNN:
     #This will always be 9, since output will always have 9 possible values only, regardless.
     
     #this is not a hyperParam. THis value will track the loss within this specific network
-    currentLoss = 9999 #initialized as a super high value to track any neurons that remain untrained.
+    currentIterationLoss = 999 #initialized as a super high value to track any neurons that remain untrained.
+    previousIterationLoss = 9999 #used to stop the training once a local minima is reached.
 
     learning_rate = 0.01 #for updating params
     
     x_length = 3 #we're either passing 9x9 sudokus or 3x3 sub grid
     kernelSize = 2 #2x2 for 3x3 sub grid, and 3x3 for 9x9 sudoku
-    kernelCount = 1
+    kernelCount = 4
 
+    isTrained = False #used to print the message once and then never go into train loop again.
 
 
     def __init__(self):
@@ -40,6 +41,8 @@ class convNN:
 
         #initialize the weights and biases of the standard network AFTER convolution with random values from -0.5 to 0.5
         self.W1, self.b1, self.W2, self.b2 = self.initParams()
+
+        
 
         '''
         W1 is 12x81
@@ -55,18 +58,27 @@ class convNN:
 
     def trainModel(self, x_train, y_train, cellPosition):
         
+        '''
+        if(self.isTrained):
+            return #minimum loss is achieved. No more training required.
+
+        if(self.previousIterationLoss < self.currentIterationLoss):
+            print("Lowest Loss achieved for cell:", cellPosition)
+            print("Lowest Loss:",self.previousIterationLoss)
+            self.isTrained = True
+            return #no need to train further if local minima is reached
+        '''
+
         numSamples = np.shape(y_train)[0] #y.size will give number of cells, not number of rows.
 
         Z1, A1, Z2, A2, Z3, A3 = self.forwardProp(x_train, numSamples)
         expectedOutputProbability = self.updateLossValue(A3,y_train, numSamples)
 
-        #print("loss at cell position ", cellPosition)
-        #print(self.currentLoss)
 
         #reduce learning rate if loss is getting lower
         #self.adaptLearningRate(cellPosition)
 
-        if(isnan(self.currentLoss)): # just for seeing any issues in the logs
+        if(isnan(self.currentIterationLoss)): # just for seeing any issues in the logs
             print("Non-numeric Loss found at cell level. Printing parameters:")
             print("Cell position: ", cellPosition)
             print("Z1 ",Z1)
@@ -88,13 +100,14 @@ class convNN:
         #normalize x values to [0,1]
         x_train = x_train/9
         
-        #print(x_train.shape)
-
+        #print("x_train:",x_train.shape)
+        #print("x_train:",x_train)
+        #print("kernels",self.kernels.getKernelArray())
         #Step 1 - Cross Correlation
-        Z1 = self.performInnerCrossCorrelation(x_train, self.kernels.getKernelArray())
+        Z1 = self.kernels.getInnerCrossCorrelation(x_train, numSamples)
+        #print("Z1",Z1)
 
         #print("Z1 shape after convolution:",Z1.shape)
-        #Z1 = np.add(self.W1.dot(x_train.T) , self.b1) #equivalent to Z1 = W1.X1_T + b1; should be of shape (12,m)
 
         #Normalization required at this step for smoothing. Because Z1 values in just 10 iterations will start to touch infinity
         #Z1_max = np.absolute(Z1).max(0,keepdims=True) #for one training example, Z1 is of shape (12,1) -> take the max ABSOLUTE value across all +ive and -ive weights
@@ -132,8 +145,10 @@ class convNN:
 
     def updateLossValue(self, A3, y_train, numSamples):
 
-        #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
+        #start by assigning the loss computed from the previous iteration.
+        self.previousIterationLoss = self.currentIterationLoss
 
+        #Note - Each neural network applies to an individual cell of the sudoku, so Loss will actually be an 81-dimension array
         yOneHot = mathFunctions.getOneHotVector(y_train)
 
         #get the indices from the predictions, corresponding to the outputs y of interest.
@@ -143,7 +158,8 @@ class convNN:
         try:
             lossVector = -1 * np.log10(A3)
             #get the loss against the indices of the expected output value.
-            self.currentLoss = np.sum((np.multiply(lossVector,yOneHot)))/numSamples
+            self.currentIterationLoss = np.sum((np.multiply(lossVector,yOneHot)))/numSamples
+            #update the current loss which will be compared to previous loss during training.
 
             #self.currentLoss = (-1 * np.sum(np.log(probabilityOfExpectedOutput)))/numExamples
             #Note - Do NOT attempt an element wise multiplication and THEN take a log of that, because most elements there will be 0, and log(0) is -infinity
@@ -194,13 +210,17 @@ class convNN:
         #print(A1)
         kernelSize = self.kernels.getKernelSize()
         #reshape the output into a column vector for each training example... and pass to a standard neural network
-        dA1 = np.reshape(dA1,(-1,kernelSize,kernelSize)) #A1 was (m,x - k + 1, x - k +1) -> reshaped to (m, 2(x - k + 1))
+        dA1 = np.reshape(dA1,(numSamples, -1,kernelSize,kernelSize)) #A1 was (m,x - k + 1, x - k +1) -> reshaped to (m, 2(x - k + 1))
         
+        #print("dA1:", dA1.shape)
+
         #convert the x_train into a square matrix, either 9x9 or 3x3, to perform the convolution
         x_train = np.reshape(x_train,(-1,3,3)) #need to change to (-1,9,9) when doing the full sudoku
 
         #Next step - Get the derivative of the loss with respect to convolution layer
         dK1 = self.performBackpropInnerCrossCorrelation(x_train, dA1, numSamples) #should of 2x2 or 3x3, same as the kernel size
+        
+        #print("dK1:", dK1.shape)
 
         return dW2, dB2, dW1, dB1, dK1
 
@@ -211,7 +231,7 @@ class convNN:
         self.b2 = self.b2 - self.learning_rate * dB2 #should be of shape (9,1)
         self.W1 = self.W1 - self.learning_rate * dW1 #should be of shape (12,81)
         self.b1 = self.b1 - self.learning_rate * dB1 #should be of shape (12,1)
-        self.kernels.setKernelArray(self.kernels.getKernelArray() - self.learning_rate * dK1) #should be of shape (2x2)
+        self.kernels.updateKernelArray(dK1, self.learning_rate) #should be of shape (2x2)
 
         '''
         print("W2",self.W2.shape)
@@ -224,7 +244,7 @@ class convNN:
     #this method reduces the learning rate for each cell's network after its loss is low enough to not require large jumps
     def adaptLearningRate(self, cellPosition):
 
-        if(self.currentLoss < 0.3 and self.learning_rate == 0.01):
+        if(self.currentIterationLoss < 0.3 and self.learning_rate == 0.01):
             self.learning_rate = 0.001 #reduced to one tenth for slower progression
             #print("Learning Rate reduction for cell position ",cellPosition)
             #print("Reducing learning rate to ", self.learning_rate)
@@ -232,26 +252,6 @@ class convNN:
         return
     #note - we should eventually add code to compare current loss with previous loss also.
 
-    #this method performs convolution between a given input and the filter of this object
-    def performInnerCrossCorrelation(self, x, filter):
-
-        inputSideLength = np.shape(x)[1] #check if input is 3x3 or 9x9
-        filterSideLength = self.kernels.getKernelSize()
-
-        #print("shape of x during convolution", x.shape)
-
-        #if a small filter square of side s moves over a big input square of side N, 
-        #it can move (N - s + 1) times before it will spill over.
-        convOutputLength = inputSideLength - filterSideLength + 1
-
-        Z = np.zeros((np.shape(x)[0], convOutputLength,convOutputLength)) #this is the expected size of the output after convolution -> (m,2,2)
-
-        for i in range(convOutputLength):
-            for j in range(convOutputLength):
-
-                Z[:,[i,j]] = np.sum(np.multiply(x[:,i:i+2,j:j+2],filter)) #get the i'th and j'th subarray from x of size (filterSideLength,filterSideLength)
-        #print("Z",Z)
-        return Z
 
         #this method performs convolution for Backprop, 
         #such that it'll add the convolution result for each training example to compute the loss gradient wrt the filters.
@@ -269,7 +269,7 @@ class convNN:
         #Z = np.zeros((np.shape(x)[0], convOutputLength,convOutputLength)) #this is the expected size of the output after convolution -> (m,2,2)
         
         #derivative of Loss wrt kernels should have the same size as the kernels
-        dK1 = np.zeros((self.kernels.getKernelSize(),self.kernels.getKernelSize()))
+        dK1 = np.zeros((self.kernels.getKernelCount(),  self.kernels.getKernelSize(),self.kernels.getKernelSize()))
         
         for t in range(numExamples):
 
@@ -298,10 +298,10 @@ class convNN:
         #Note - we want to curb the initialization loss by ensuring that the initial random weights don't end up taking extreme values that are "confidently wrong". Initial biases can be set to 0.
         #Weights will multiplied by 0.01 to ensure that the initialization of the weights is as close to 0 as possible, and the network is basically making random guesses without training.
 
-        conv_output_length = self.x_length - self.kernelSize + 1 #this is the expected length of the side if the convolution output.
+        conv_output_length = (self.x_length - self.kernelSize + 1) #this is the expected length of the side if the convolution output.
 
         #W1 needs to take input-size according to the output of the convolution step.
-        W1 = np.random.randn(conv_output_length*conv_output_length, self.hidden_layer_neurons)  * 0.1 
+        W1 = np.random.randn(conv_output_length*conv_output_length*self.kernelCount, self.hidden_layer_neurons)  * 0.1 
         #note that these neurons are of size ((x-k+1)*(x-k+1),h) 
         #because we will convert the convolution output into a row vector and feed it to the "dense" layer.
         
