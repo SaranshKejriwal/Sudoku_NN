@@ -23,14 +23,15 @@ class convNN:
     currentIterationLoss = 999 #initialized as a super high value to track any neurons that remain untrained.
     previousIterationLoss = 9999 #used to stop the training once a local minima is reached.
 
-    learning_rate = 0.01 #for updating params
+    learningRate = 0.01 #for updating params
     
     x_length = 3 #we're either passing 9x9 sudokus or 3x3 sub grid
     kernelSize = 2 #2x2 for 3x3 sub grid, and 3x3 for 9x9 sudoku
-    kernelCount = 4
+    kernelCount = 20
 
     isTrained = False #used to print the message once and then never go into train loop again.
-
+    isSlowTraining = False #used to determine when the learning rate is reduced for slow traversal
+    #if learning rate is slowed and the previous iteration loss is less than current iteration, then training should stop.
 
     def __init__(self):
         #constructor
@@ -58,16 +59,23 @@ class convNN:
 
     def trainModel(self, x_train, y_train, cellPosition):
         
-        '''
+        #'''
         if(self.isTrained):
             return #minimum loss is achieved. No more training required.
 
-        if(self.previousIterationLoss < self.currentIterationLoss):
+        if(not self.isSlowTraining and self.previousIterationLoss < self.currentIterationLoss):
+            print("Reducing Learning Rate for:", cellPosition)
+            self.reduceLearningRate()
+            self.isSlowTraining = True
+            #reduce the learning rate once the loss starts increasing
+        #stop training if min loss is achieved AFTER slow training
+        elif(self.isSlowTraining and self.previousIterationLoss < self.currentIterationLoss):
             print("Lowest Loss achieved for cell:", cellPosition)
-            print("Lowest Loss:",self.previousIterationLoss)
-            self.isTrained = True
-            return #no need to train further if local minima is reached
-        '''
+            print("Lowest Loss:",self.previousIterationLoss)            
+            self.isTrained = True #stop training once lowest loss is achieved
+            return 
+        #'''
+
 
         numSamples = np.shape(y_train)[0] #y.size will give number of cells, not number of rows.
 
@@ -227,11 +235,11 @@ class convNN:
     #this method updates params after backprop
     def updateParams(self,dW2, dB2, dW1, dB1, dK1):
 
-        self.W2 = self.W2 - self.learning_rate * dW2 #should be of shape (9,12)
-        self.b2 = self.b2 - self.learning_rate * dB2 #should be of shape (9,1)
-        self.W1 = self.W1 - self.learning_rate * dW1 #should be of shape (12,81)
-        self.b1 = self.b1 - self.learning_rate * dB1 #should be of shape (12,1)
-        self.kernels.updateKernelArray(dK1, self.learning_rate) #should be of shape (2x2)
+        self.W2 = self.W2 - self.learningRate * dW2 #should be of shape (9,12)
+        self.b2 = self.b2 - self.learningRate * dB2 #should be of shape (9,1)
+        self.W1 = self.W1 - self.learningRate * dW1 #should be of shape (12,81)
+        self.b1 = self.b1 - self.learningRate * dB1 #should be of shape (12,1)
+        self.kernels.updateKernelArray(dK1, self.learningRate) #should be of shape (2x2)
 
         '''
         print("W2",self.W2.shape)
@@ -242,13 +250,9 @@ class convNN:
         return
 
     #this method reduces the learning rate for each cell's network after its loss is low enough to not require large jumps
-    def adaptLearningRate(self, cellPosition):
-
-        if(self.currentIterationLoss < 0.3 and self.learning_rate == 0.01):
-            self.learning_rate = 0.001 #reduced to one tenth for slower progression
-            #print("Learning Rate reduction for cell position ",cellPosition)
-            #print("Reducing learning rate to ", self.learning_rate)
-
+    def reduceLearningRate(self):
+        self.learningRate = self.learningRate/10 #reduced to one tenth for slower progression
+        print("Reducing learning rate to ", self.learningRate)
         return
     #note - we should eventually add code to compare current loss with previous loss also.
 

@@ -38,19 +38,11 @@ x_val = s.getCSVValidationInputExamples()
 y_val = s.getCSVValidationOutputExamples()
 
 
-
-
-
-
-
-
-
-
 def runModelTrainTestOnFullData(modelRunner, model, x_train, y_train, x_val, y_val, numIterations):
     #find accuracy on training data before training
     modelRunner.testModel(model,x_train,y_train)
     #pre-train accuracy on training data
-    m.trainModel(nn, x_train, y_train,2000)
+    m.trainModel(nn, x_train, y_train,numIterations)
 
     #testing model
     print('Final Validation Data Accuracy:')
